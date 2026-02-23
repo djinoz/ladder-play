@@ -469,6 +469,12 @@ export const Dashboard = () => {
                             )}
                         </div>
                     ))}
+
+                <div className="mt-12 pt-6 border-t border-slate-300 text-xs text-slate-500 text-center">
+                    <strong>Disclaimer:</strong> This application and report are provided as-is without warranty.
+                    This tool is not designed for professional coaching, therapy, or counselling, it is merely a framework for self-reflection.
+                    You should always seek professional advice where appropriate.
+                </div>
             </div>
 
         </div>

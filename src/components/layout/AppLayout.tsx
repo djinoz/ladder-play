@@ -52,8 +52,11 @@ export const AppLayout = () => {
                 <Outlet />
             </main>
 
-            <footer className="w-full py-6 text-center text-xs text-textSecondary z-10 print:hidden">
+            <footer className="w-full py-6 text-center text-xs text-textSecondary z-10 print:hidden flex flex-col gap-2 items-center">
                 <p>A meaning-making toolkit.</p>
+                <p className="max-w-xl text-[10px] text-slate-500">
+                    Disclaimer: This application is provided as-is without warranty. It is not designed for professional coaching, therapy, or counselling, it is merely a tool for self-reflection. You should always seek professional advice if you are experiencing distress.
+                </p>
             </footer>
         </div>
     );

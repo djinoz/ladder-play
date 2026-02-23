@@ -15,22 +15,49 @@ export const ladderingChat = functions.runWith({ secrets: ["ANTHROPIC_API_KEY"] 
             throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
         }
 
-        const { messages, systemPrompt } = data;
+        const { messages, currentTurn = 1, maxTurns = 5 } = data;
 
         if (!messages || !Array.isArray(messages)) {
             throw new functions.https.HttpsError('invalid-argument', 'Messages array is required');
         }
 
+        const isFinalTurn = currentTurn >= maxTurns;
+
+        const baseKellyPrompt = `You are a therapist conducting a "Kelly Laddering" session to discover the user's core constructs.
+CORE STANCE:
+- Be genuinely curious, not leading. Discover, do not confirm.
+- Maintain "credulous listening": treat every response as meaningful.
+- Resist the urge to interpret or reflect back prematurely. The user's words are the data.
+- Do not offer candidate answers or assume the user's position.
+
+QUESTIONING TECHNIQUE:
+- NEVER paraphrase upward. Use the user's EXACT words in your questions.
+- Primary probe format: "And why is [their exact phrase] important to you?"
+- Alternative probes: "What would it mean if you didn't have that?" or "What does that give you?"
+- Do NOT ask "how does that make you feel?".
+- Ask ONLY ONE short question at a time. Do not add filler text.`;
+
+        const finalTurnPrompt = `You are a therapist concluding a "Kelly Laddering" session.
+You have gone through enough iterations. This is the final turn. Do NOT ask any more questions.
+Instead, "Close the Ladder" using the following format:
+1. Summarize the full ladder back to the client in their own words, from bottom to top, formatting the ladder elements as a bulleted list.
+2. Add a clear double newline, then tentatively offer 3-5 core constructs (values) that emerged from their words, formatted as a numbered list.
+3. Add a clear double newline, then end by asking exactly: "So it sounds like what matters most is what we've outlined here... does that feel like an accurate picture?"
+Keep your tone collaborative and tentative. Offer the output as a hypothesis, not a verdict. Remember to use proper markdown formatting and line breaks for readability.`;
+
+        const promptToUse = isFinalTurn ? finalTurnPrompt : baseKellyPrompt;
+
         try {
             const response = await anthropic.messages.create({
                 model: "claude-haiku-4-5-20251001",
                 max_tokens: 1024,
-                system: systemPrompt || "You are an empathetic, insightful life coach helping a user uncover their core values through the '5 Whys' laddering technique.",
+                system: promptToUse,
                 messages: messages,
             });
 
             return {
-                reply: response.content[0].text
+                reply: response.content[0].text,
+                isConcluded: isFinalTurn
             };
         } catch (error) {
             console.error("Anthropic API Error:", error);

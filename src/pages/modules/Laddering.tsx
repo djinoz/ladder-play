@@ -8,6 +8,7 @@ import { functions } from '../../config/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { useNavigate } from 'react-router-dom';
 import { Mic, MicOff, Volume2, VolumeX, Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessage {
     role: 'user' | 'assistant';
@@ -20,6 +21,10 @@ export const Laddering = () => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputMsg, setInputMsg] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isConcluded, setIsConcluded] = useState(false);
+
+    const MAX_TURNS = 5;
+    const currentTurnCount = messages.filter(m => m.role === 'user').length;
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [isVoiceSupported, setIsVoiceSupported] = useState(true);
@@ -158,12 +163,19 @@ export const Laddering = () => {
             const ladderingChat = httpsCallable(functions, 'ladderingChat');
             const response = await ladderingChat({
                 messages: newHistory.map(m => ({ role: m.role, content: m.content })),
-                systemPrompt: "You are an empathetic, insightful life coach helping a user uncover their core values through the '5 Whys' laddering technique. You ask short, probing questions like 'Why did that matter to you?' based on their input. Only ask one question at a time."
+                currentTurn: newHistory.filter(m => m.role === 'user').length,
+                maxTurns: MAX_TURNS
             });
 
             const replyText = (response.data as any).reply;
+            const concluded = (response.data as any).isConcluded;
+
             const aiMsg: ChatMessage = { role: 'assistant', content: replyText };
             setMessages(prev => [...prev, aiMsg]);
+
+            if (concluded) {
+                setIsConcluded(true);
+            }
 
             // This is now async, but we don't need to await it here since it's just audio playing in the background
             speakText(replyText);
@@ -193,11 +205,16 @@ export const Laddering = () => {
 
                 <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
                     <CardHeader title="Values Laddering" subtitle="Answer what felt good, and let's explore why." />
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" className={`px-3 py-1 text-sm ${isVoiceMode ? 'text-primary' : 'text-slate-500'}`} onClick={() => setIsVoiceMode(!isVoiceMode)}>
-                            {isVoiceMode ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                        </Button>
-                        <Button variant="secondary" className="px-3 py-1 text-sm" onClick={handleSave}>End & Save</Button>
+                    <div className="flex flex-col items-end gap-2">
+                        <div className="text-xs font-semibold text-primary uppercase tracking-wider bg-primary/10 px-2 py-1 rounded-md">
+                            Turn {Math.min(currentTurnCount, MAX_TURNS)} of {MAX_TURNS}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="ghost" className={`px-3 py-1 text-sm ${isVoiceMode ? 'text-primary' : 'text-slate-500'}`} onClick={() => setIsVoiceMode(!isVoiceMode)}>
+                                {isVoiceMode ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                            </Button>
+                            <Button variant="secondary" className="px-3 py-1 text-sm" onClick={handleSave}>End & Save</Button>
+                        </div>
                     </div>
                 </div>
 
@@ -210,11 +227,11 @@ export const Laddering = () => {
                     )}
                     {messages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`p-4 rounded-2xl max-w-[80%] shadow-lg ${m.role === 'user'
+                            <div className={`p-4 rounded-2xl max-w-[80%] shadow-lg prose prose-sm prose-invert prose-p:leading-relaxed prose-li:my-1 prose-ul:my-2 prose-ol:my-2 ${m.role === 'user'
                                 ? 'bg-primary/20 text-white rounded-tr-sm border border-primary/30'
                                 : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'
                                 }`}>
-                                {m.content}
+                                <ReactMarkdown>{m.content}</ReactMarkdown>
                             </div>
                         </div>
                     ))}
@@ -228,38 +245,45 @@ export const Laddering = () => {
                     <div ref={endOfMessagesRef} />
                 </div>
 
-                <div className="flex items-end gap-2 bg-background p-2 rounded-xl border border-slate-700 focus-within:border-primary/50 transition-colors">
-                    <button
-                        type="button"
-                        onClick={toggleRecording}
-                        disabled={!isVoiceSupported}
-                        className={`p-3 rounded-lg flex-shrink-0 transition-colors group relative ${!isVoiceSupported ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-600' :
-                            isRecording ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-slate-800 text-slate-400 hover:text-primary hover:bg-slate-700'
-                            }`}
-                    >
-                        {isRecording ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-                        {!isVoiceSupported && (
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-slate-200 text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-center border border-slate-700 pointer-events-none">
-                                Voice recognition blocked by browser (common in Brave). Try Chrome or Safari.
-                            </div>
-                        )}
-                    </button>
-                    <textarea
-                        className="flex-1 bg-transparent border-none text-textPrimary resize-none min-h-[50px] max-h-[150px] p-3 focus:outline-none focus:ring-0"
-                        placeholder="Type your response or tap mic..."
-                        value={inputMsg}
-                        onChange={(e) => setInputMsg(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSend();
-                            }
-                        }}
-                    />
-                    <Button onClick={handleSend} disabled={isProcessing || !inputMsg.trim()} className="p-3 h-auto">
-                        <Send className="w-5 h-5" />
-                    </Button>
-                </div>
+                {!isConcluded ? (
+                    <div className="flex items-end gap-2 bg-background p-2 rounded-xl border border-slate-700 focus-within:border-primary/50 transition-colors">
+                        <button
+                            type="button"
+                            onClick={toggleRecording}
+                            disabled={!isVoiceSupported}
+                            className={`p-3 rounded-lg flex-shrink-0 transition-colors group relative ${!isVoiceSupported ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-600' :
+                                isRecording ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-slate-800 text-slate-400 hover:text-primary hover:bg-slate-700'
+                                }`}
+                        >
+                            {isRecording ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                            {!isVoiceSupported && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-slate-200 text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-center border border-slate-700 pointer-events-none">
+                                    Voice recognition blocked by browser (common in Brave). Try Chrome or Safari.
+                                </div>
+                            )}
+                        </button>
+                        <textarea
+                            className="flex-1 bg-transparent border-none text-textPrimary resize-none min-h-[50px] max-h-[150px] p-3 focus:outline-none focus:ring-0"
+                            placeholder="Type your response or tap mic..."
+                            value={inputMsg}
+                            onChange={(e) => setInputMsg(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
+                        />
+                        <Button onClick={handleSend} disabled={isProcessing || !inputMsg.trim()} className="p-3 h-auto">
+                            <Send className="w-5 h-5" />
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center p-4">
+                        <p className="text-slate-300 font-medium mb-4">You have reached the core of your values.</p>
+                        <Button onClick={handleSave} className="px-8 py-3 w-full md:w-auto text-lg shadow-[0_0_15px_rgba(56,189,248,0.3)]">Save & Continue</Button>
+                    </div>
+                )}
             </Card>
         </div>
     );

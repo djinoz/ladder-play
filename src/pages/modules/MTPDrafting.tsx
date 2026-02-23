@@ -8,12 +8,14 @@ import { functions, db } from '../../config/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { collection, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 export const MTPDrafting = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [mtpDraft, setMtpDraft] = useState('');
     const [isSynthesizing, setIsSynthesizing] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState('');
 
     const gatherContext = async () => {
@@ -80,12 +82,24 @@ export const MTPDrafting = () => {
                 ) : (
                     <div className="mt-8 animate-slide-up">
                         <div className="bg-primary/10 border border-primary/20 p-6 rounded-xl mb-6 shadow-inner">
-                            <p className="text-sm font-semibold text-primary mb-2 uppercase tracking-wide">AI Proposal</p>
-                            <TextArea
-                                value={mtpDraft}
-                                onChange={(e) => setMtpDraft(e.target.value)}
-                                className="min-h-[250px] font-medium text-lg border-none bg-transparent focus:ring-0 px-0 shadow-none leading-relaxed text-white"
-                            />
+                            <div className="flex justify-between items-center mb-4 border-b border-primary/10 pb-2">
+                                <p className="text-sm font-semibold text-primary uppercase tracking-wide">AI Proposal</p>
+                                <Button variant="ghost" className="text-xs px-3 py-1 h-auto" onClick={() => setIsEditing(!isEditing)}>
+                                    {isEditing ? 'Preview' : 'Edit Text'}
+                                </Button>
+                            </div>
+
+                            {isEditing ? (
+                                <TextArea
+                                    value={mtpDraft}
+                                    onChange={(e) => setMtpDraft(e.target.value)}
+                                    className="min-h-[250px] font-medium text-lg border-none bg-black/20 focus:ring-1 focus:ring-primary/50 shadow-inner leading-relaxed text-white rounded-lg p-4"
+                                />
+                            ) : (
+                                <div className="prose prose-sm prose-invert prose-p:leading-relaxed prose-li:my-1 prose-ul:my-2 prose-ol:my-2 min-h-[250px] text-white">
+                                    <ReactMarkdown>{mtpDraft}</ReactMarkdown>
+                                </div>
+                            )}
                         </div>
                         <p className="text-sm text-textSecondary mb-6">
                             Review, edit, and stress-test this draft. Does it still matter if no one knows? Would you pursue it without seeing its completion?

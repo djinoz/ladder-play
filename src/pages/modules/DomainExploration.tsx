@@ -102,7 +102,7 @@ export const DomainExploration = () => {
                             </div>
                         </div>
 
-                        {(ratings[domain.id]?.alive >= 4 && ratings[domain.id]?.neglected >= 4) && (
+                        {(ratings[domain.id]?.alive >= 4 && ratings[domain.id]?.neglected <= 2) && (
                             <div className="mt-2 text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 p-2 rounded text-center">
                                 ✨ High Potential for MTP
                             </div>

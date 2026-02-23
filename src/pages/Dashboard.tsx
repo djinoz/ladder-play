@@ -4,6 +4,7 @@ import { Card, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Link } from 'react-router-dom';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import ReactMarkdown from 'react-markdown';
 import { db } from '../config/firebase';
 import { collection, getDocs, query } from 'firebase/firestore';
 
@@ -47,7 +48,8 @@ export const Dashboard = () => {
     const modulesCompletedCount = new Set(sessions.filter(s => s.status === 'completed' || s.completedAt).map(s => s.type)).size;
     const totalModules = 6; // Not counting 90-day experiment as a core input module
 
-    const isLocked = !areCoreModulesFinished;
+    const isCoreLocked = !areCoreModulesFinished;
+    const isMtpLocked = modulesCompletedCount < 4;
 
     const ProgressIndicator = ({ type }: { type: string }) => {
         const session = sessions.find(s => s.type === type);
@@ -128,7 +130,7 @@ export const Dashboard = () => {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
 
                 {/* Module 1 */}
                 <Card className="hover:border-primary/50 transition-colors group cursor-pointer relative overflow-hidden">
@@ -147,8 +149,8 @@ export const Dashboard = () => {
                 </Card>
 
                 {/* Module 3 */}
-                <Card className={isLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-amber-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
-                    {isLocked ? (
+                <Card className={isCoreLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-amber-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
+                    {isCoreLocked ? (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                             <div className="bg-slate-800 text-slate-200 text-xs py-1.5 px-3 rounded-md shadow-xl border border-slate-700 font-medium">
                                 Complete Modules 1 & 2 first
@@ -158,13 +160,13 @@ export const Dashboard = () => {
                         <Link to="/peak" className="absolute inset-0 z-10" />
                     )}
                     <ProgressIndicator type="peak_experience" />
-                    <div className={`w-12 h-12 bg-amber-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isLocked ? '' : 'group-hover:scale-110'}`}>🏔️</div>
+                    <div className={`w-12 h-12 bg-amber-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isCoreLocked ? '' : 'group-hover:scale-110'}`}>🏔️</div>
                     <CardHeader title="Module 3: Peak Experience" subtitle="Mine 3 peak moments for repeating patterns." />
                 </Card>
 
                 {/* Module 4 */}
-                <Card className={isLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-emerald-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
-                    {isLocked ? (
+                <Card className={isCoreLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-emerald-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
+                    {isCoreLocked ? (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                             <div className="bg-slate-800 text-slate-200 text-xs py-1.5 px-3 rounded-md shadow-xl border border-slate-700 font-medium">
                                 Complete Modules 1 & 2 first
@@ -174,13 +176,13 @@ export const Dashboard = () => {
                         <Link to="/explore" className="absolute inset-0 z-10" />
                     )}
                     <ProgressIndicator type="domain_exploration" />
-                    <div className={`w-12 h-12 bg-emerald-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isLocked ? '' : 'group-hover:scale-110'}`}>🌐</div>
+                    <div className={`w-12 h-12 bg-emerald-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isCoreLocked ? '' : 'group-hover:scale-110'}`}>🌐</div>
                     <CardHeader title="Module 4: Domain Exploration" subtitle="Explore the 10 post-scarcity domains." />
                 </Card>
 
                 {/* Module 5 */}
-                <Card className={isLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-rose-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
-                    {isLocked ? (
+                <Card className={isCoreLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-rose-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
+                    {isCoreLocked ? (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                             <div className="bg-slate-800 text-slate-200 text-xs py-1.5 px-3 rounded-md shadow-xl border border-slate-700 font-medium">
                                 Complete Modules 1 & 2 first
@@ -190,57 +192,57 @@ export const Dashboard = () => {
                         <Link to="/contribution" className="absolute inset-0 z-10" />
                     )}
                     <ProgressIndicator type="contribution" />
-                    <div className={`w-12 h-12 bg-rose-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isLocked ? '' : 'group-hover:scale-110'}`}>🤝</div>
+                    <div className={`w-12 h-12 bg-rose-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isCoreLocked ? '' : 'group-hover:scale-110'}`}>🤝</div>
                     <CardHeader title="Module 5: Contribution Calibration" subtitle="Reflect on the stakes and who relies on you." />
                 </Card>
 
                 {/* Module 6 */}
-                <Card className={isLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-indigo-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
-                    {isLocked ? (
+                <Card className={isMtpLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed" : "hover:border-indigo-500/50 transition-colors group cursor-pointer relative overflow-hidden"}>
+                    {isMtpLocked ? (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                             <div className="bg-slate-800 text-slate-200 text-xs py-1.5 px-3 rounded-md shadow-xl border border-slate-700 font-medium">
-                                Complete Modules 1 & 2 first
+                                Complete 4 modules first
                             </div>
                         </div>
                     ) : (
                         <Link to="/mtp" className="absolute inset-0 z-10" />
                     )}
                     <ProgressIndicator type="mtp_draft" />
-                    <div className={`w-12 h-12 bg-indigo-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isLocked ? '' : 'group-hover:scale-110'}`}>✨</div>
+                    <div className={`w-12 h-12 bg-indigo-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isMtpLocked ? '' : 'group-hover:scale-110'}`}>✨</div>
                     <CardHeader title="Module 6: MTP Drafting (AI)" subtitle="Synthesize all previous modules into your Massive Transformational Purpose." />
                 </Card>
 
                 {/* Module 7 */}
-                <Card className={isLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed md:col-span-2 max-w-lg mx-auto w-full" : "hover:border-violet-500/50 transition-colors group cursor-pointer relative overflow-hidden md:col-span-2 max-w-lg mx-auto w-full"}>
-                    {isLocked ? (
+                <Card className={isMtpLocked ? "opacity-50 grayscale border-slate-800 transition-colors group relative overflow-hidden cursor-not-allowed md:col-span-2 max-w-lg mx-auto w-full" : "hover:border-violet-500/50 transition-colors group cursor-pointer relative overflow-hidden md:col-span-2 max-w-lg mx-auto w-full"}>
+                    {isMtpLocked ? (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                             <div className="bg-slate-800 text-slate-200 text-xs py-1.5 px-3 rounded-md shadow-xl border border-slate-700 font-medium">
-                                Complete Modules 1 & 2 first
+                                Complete 4 modules first
                             </div>
                         </div>
                     ) : (
                         <Link to="/experiment" className="absolute inset-0 z-10" />
                     )}
                     <ProgressIndicator type="experiment" />
-                    <div className={`w-12 h-12 bg-violet-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isLocked ? '' : 'group-hover:scale-110'}`}>🧪</div>
+                    <div className={`w-12 h-12 bg-violet-900/40 rounded-xl flex items-center justify-center text-xl mb-4 transition-transform ${isMtpLocked ? '' : 'group-hover:scale-110'}`}>🧪</div>
                     <CardHeader title="Module 7: 90-Day Experiment" subtitle="Commit to one small concrete action." />
                 </Card>
 
             </div>
 
-            <h2 className="text-2xl font-semibold mt-8 border-b border-surface pb-4">Activity History</h2>
+            <h2 className="text-2xl font-semibold mt-8 border-b border-surface pb-4 print:hidden">Activity History</h2>
 
             {loading ? (
-                <p className="text-textSecondary text-center py-8">Loading history...</p>
+                <p className="text-textSecondary text-center py-8 print:hidden">Loading history...</p>
             ) : sessions.length === 0 ? (
-                <Card className="bg-surface/30 text-center py-12 border border-dashed border-slate-700">
+                <Card className="bg-surface/30 text-center py-12 border border-dashed border-slate-700 print:hidden">
                     <p className="text-textSecondary mb-4">No activity recorded yet.</p>
                     <Link to="/audit">
                         <Button variant="secondary">Start your first Meaning Audit</Button>
                     </Link>
                 </Card>
             ) : (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 print:hidden">
                     {sessions.map(sess => (
                         <Card key={sess.id} className="flex justify-between items-center py-4 bg-surface/50">
                             <div>
@@ -325,7 +327,7 @@ export const Dashboard = () => {
                                         return (
                                             <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                                                 <div
-                                                    className={`p-4 rounded-2xl max-w-[85%] shadow-lg text-sm md:text-base ${isUser ? 'rounded-tr-sm text-white' : 'rounded-tl-sm text-slate-200'
+                                                    className={`p-3 rounded-2xl max-w-[85%] shadow-sm prose prose-sm prose-invert prose-p:leading-relaxed prose-li:my-1 prose-ul:my-2 prose-ol:my-2 ${isUser ? 'rounded-tr-sm text-white' : 'rounded-tl-sm text-slate-200'
                                                         }`}
                                                     style={{
                                                         backgroundColor: bgColor,
@@ -336,14 +338,46 @@ export const Dashboard = () => {
                                                     <div className="text-[10px] opacity-50 mb-1 uppercase tracking-wider font-semibold">
                                                         {isUser ? 'You' : 'Guide'} • Level {Math.floor(i / 2) + 1}
                                                     </div>
-                                                    {m.content}
+                                                    <ReactMarkdown>{m.content}</ReactMarkdown>
                                                 </div>
                                             </div>
                                         );
                                     })}
                                 </div>
+                            ) : selectedSession.type === 'mtp_draft' && selectedSession.draft ? (
+                                <div className="prose prose-sm prose-invert prose-p:leading-relaxed text-white max-w-none bg-surface/40 p-6 rounded-xl border border-slate-700/50 mt-4">
+                                    <ReactMarkdown>{selectedSession.draft}</ReactMarkdown>
+                                </div>
+                            ) : selectedSession.type === 'domain_exploration' && selectedSession.ratings ? (
+                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                    {Object.entries(selectedSession.ratings).map(([domainId, r]: any) => (
+                                        <div key={domainId} className="bg-surface/40 p-4 rounded-xl border border-slate-700/50">
+                                            <div className="font-semibold capitalize text-slate-200 mb-1">{domainId}</div>
+                                            <div className="text-xs text-slate-400">Aliveness: <span className="text-white font-medium">{r.alive}/5</span></div>
+                                            <div className="text-xs text-slate-400">Neglect: <span className="text-white font-medium">{r.neglected}/5</span></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : selectedSession.type === 'peak_experience' && selectedSession.experiences ? (
+                                <div className="flex flex-col gap-4 mt-4">
+                                    {Object.entries(selectedSession.experiences).filter(([_, v]) => v).map(([k, v]: any) => (
+                                        <div key={k} className="bg-surface/40 p-4 rounded-xl border border-slate-700/50">
+                                            <div className="font-semibold text-primary text-lg mb-2 capitalize">Most {k}</div>
+                                            <div className="text-sm text-slate-300 leading-relaxed">{v}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : selectedSession.type === 'contribution' && selectedSession.responses ? (
+                                <div className="flex flex-col gap-4 mt-4">
+                                    {Object.entries(selectedSession.responses).map(([k, v]: any) => (
+                                        <div key={k} className="bg-surface/40 p-4 rounded-xl border border-slate-700/50">
+                                            <div className="font-semibold capitalize text-primary mb-2">{k.replace(/([A-Z])/g, ' $1').trim()}</div>
+                                            <div className="text-sm text-slate-300 leading-relaxed">{v}</div>
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <pre className="bg-slate-900 p-4 rounded-lg text-xs md:text-sm text-slate-300 overflow-x-auto whitespace-pre-wrap font-mono border border-slate-800">
+                                <pre className="bg-slate-900 p-4 rounded-lg text-xs md:text-sm text-slate-300 overflow-x-auto whitespace-pre-wrap font-mono border border-slate-800 mt-4">
                                     {JSON.stringify(selectedSession, null, 2)}
                                 </pre>
                             )}
@@ -354,6 +388,88 @@ export const Dashboard = () => {
                     </div>
                 </div>
             )}
+
+            {/* Print-only Detailed Results */}
+            <div className="hidden print:flex flex-col gap-8 mt-4 bg-white text-black p-0 rounded-xl shadow-none w-full max-w-none">
+                <h1 className="text-3xl font-bold border-b border-slate-300 pb-2 mb-6 text-black">Completed Modules Data</h1>
+                {[...sessions]
+                    .filter(s => s.status === 'completed' || s.completedAt)
+                    .sort((a, b) => {
+                        const order = ['meaning_audit', 'laddering_ai', 'peak_experience', 'domain_exploration', 'contribution', 'mtp_draft', 'experiment'];
+                        return order.indexOf(a.type) - order.indexOf(b.type);
+                    })
+                    .map(sess => (
+                        <div key={'print-' + sess.id} className="mb-8 break-inside-avoid border border-slate-200 p-6 rounded-lg bg-slate-50 text-black">
+                            <h3 className="text-2xl font-bold mb-4 capitalize border-b border-slate-300 pb-2 text-slate-800">
+                                {sess.type ? sess.type.replace('_', ' ') : 'Module Session'}
+                            </h3>
+                            {sess.type === 'meaning_audit' && sess.ratings && (
+                                <div className="w-full flex justify-center mt-4">
+                                    <RadarChart cx="50%" cy="50%" outerRadius={100} width={500} height={300} data={
+                                        ['Work & Vocation', 'Relationships', 'Creative Life', 'Contemplative Life', 'Body & Health', 'Community Contribution', 'Nature', 'Transcendent / Unknown'].map(domain => ({
+                                            subject: domain.split(' ')[0],
+                                            Importance: sess.ratings[domain]?.importance || 0,
+                                            Fulfillment: sess.ratings[domain]?.fulfillment || 0,
+                                            fullMark: 10,
+                                        }))
+                                    }>
+                                        <PolarGrid stroke="#cbd5e1" />
+                                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 12 }} />
+                                        <PolarRadiusAxis angle={30} domain={[0, 10]} max={10} tick={false} axisLine={false} />
+                                        <Radar name="Importance" dataKey="Importance" stroke="#0284c7" fill="#0284c7" fillOpacity={0.2} />
+                                        <Radar name="Fulfillment" dataKey="Fulfillment" stroke="#7c3aed" fill="#7c3aed" fillOpacity={0.4} />
+                                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                    </RadarChart>
+                                </div>
+                            )}
+                            {sess.type === 'laddering_ai' && sess.messages && (
+                                <div className="flex flex-col gap-2">
+                                    <h4 className="font-semibold text-slate-700">AI Final Synthesis:</h4>
+                                    {sess.messages.filter((m: any) => m.role === 'assistant').slice(-1).map((m: any, i: number) => (
+                                        <div key={i} className="prose prose-sm text-black max-w-none">
+                                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {sess.type === 'mtp_draft' && sess.draft && (
+                                <div className="prose prose-sm text-black max-w-none">
+                                    <ReactMarkdown>{sess.draft}</ReactMarkdown>
+                                </div>
+                            )}
+                            {sess.type === 'domain_exploration' && sess.ratings && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    {Object.entries(sess.ratings).map(([domainId, r]: any) => (
+                                        <div key={domainId} className="mb-2">
+                                            <div className="font-semibold capitalize">{domainId}</div>
+                                            <div className="text-sm">Aliveness: {r.alive}/5 | Neglected: {r.neglected}/5</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {sess.type === 'peak_experience' && sess.experiences && (
+                                <div className="flex flex-col gap-4 mt-4">
+                                    {Object.entries(sess.experiences).filter(([_, v]) => v).map(([k, v]: any) => (
+                                        <div key={k}>
+                                            <div className="font-semibold text-slate-800 text-lg capitalize">Most {k}</div>
+                                            <div className="text-sm text-slate-700 mt-1">{v}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {sess.type === 'contribution' && sess.responses && (
+                                <div className="flex flex-col gap-4">
+                                    {Object.entries(sess.responses).map(([k, v]: any) => (
+                                        <div key={k}>
+                                            <div className="font-semibold capitalize text-slate-800">{k}</div>
+                                            <div className="text-sm text-slate-700">{v}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+            </div>
 
         </div>
     );

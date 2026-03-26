@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Compass, ArrowRight, ExternalLink } from 'lucide-react';
+import { Compass, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 export const Home = () => {
@@ -23,6 +23,11 @@ export const Home = () => {
                         Start the Audit <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
+                <a href="https://open.substack.com/pub/djinoz/p/app-ladder-play?r=jy6d&utm_campaign=TheApp&utm_medium=web&showWelcomeOnShare=true" target="_blank" rel="noopener noreferrer">
+                    <Button variant="secondary" className="w-full sm:w-auto text-lg px-8 py-4 gap-2">
+                        <Compass className="w-5 h-5" /> Learn More...
+                    </Button>
+                </a>
             </div>
 
             <div className="mt-24 glass-panel rounded-2xl p-8 text-left w-full border border-white/5 bg-gradient-to-br from-surface/80 to-background/80">
@@ -56,16 +61,9 @@ export const Home = () => {
                             <strong className="block text-white mb-1 tracking-wide">Go Deeper</strong>
                             <span className="block mb-4">Unlock premium AI-guided analysis and voice interactions to synthesise your massive transformational purpose.</span>
 
-                            {/* TODO: Replace Learn more... link with a YouTube demo video modal once demo video is ready */}
+                            {/* TODO: Replace with a YouTube demo video modal once demo video is ready */}
                             <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-lg group w-full sm:w-3/4 mx-auto mt-6">
                                 <img src="/dashboard-preview.png" alt="Dashboard Preview" className="w-full h-auto object-contain bg-slate-900 transition-transform duration-700 group-hover:scale-105" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent flex items-end p-4">
-                                    <a href="https://open.substack.com/pub/djinoz/p/app-ladder-play?r=jy6d&utm_campaign=TheApp&utm_medium=web&showWelcomeOnShare=true" target="_blank" rel="noopener noreferrer">
-                                        <Button variant="secondary" className="gap-2 text-sm bg-slate-800/80 hover:bg-slate-700 backdrop-blur border-white/10">
-                                            <ExternalLink className="w-4 h-4 text-primary" /> Learn more...
-                                        </Button>
-                                    </a>
-                                </div>
                             </div>
                         </div>
                     </li>
